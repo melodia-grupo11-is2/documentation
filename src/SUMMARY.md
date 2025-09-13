@@ -2,4 +2,4 @@
 
 - [Inicio](./Inicio.md)
 
-- [Guía](./Inicio.md)
+- [Guía](./Guia.md)
