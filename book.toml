@@ -1,0 +1,6 @@
+[book]
+authors = ["melodia-grupo11-is2"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Melodia - Ing. de Software II - FIUBA"
