@@ -2,4 +2,6 @@
 
 - [Inicio](./Inicio.md)
 
-- [Guia](./guia.md)
+- [Documentacion](./documentacion.md)
+
+- [Manual de usuario](./manual.md)
