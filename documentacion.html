@@ -185,7 +185,32 @@
 <p>Por otro lado este mismo servicio tiene un endpoint particular que es utilizado por los demas servicios que es el de subir un archivo (ya sea de sonido o una imágen) a Google Cloud Storage, tomamos esta decisión por que no le vimos sentido a crear un microservicio para que solo tenga este endpoint, y tener repetido la lógica por ejemplo en el servicio de Users y en el de Library para que por ejemplo uno solo cargue sonidos y otro las imagenes, tampoco lo vimos muy util.</p>
 <p>Para notar, tambien tenemos el monitoreo de nuestra aplicación utilizando pub/sub de google cloud, para que envie los logs a <a href="https://onenr.io/08jqkYmevwl">new relic y poder monitorearla</a>, y si se quiere buscar particularmente información de cada endpoint implementado, los repositorios de los servicios cuentan con sus respectivos archivos openapi.</p>
 <h2 id="gateway"><a class="header" href="#gateway">Gateway</a></h2>
-<p><a href="https://gateway-182190207837.europe-west1.run.app/">Acceso al gateway</a></p>
+<p>El Servicio Gateway es el punto de entrada centralizado para toda la plataforma Melodía. Su función principal es recibir las solicitudes provenientes de las aplicaciones cliente (web, móvil o desktop) y dirigirlas de manera segura y eficiente hacia los microservicios correspondientes —como el Servicio de Usuarios o el Servicio de Biblioteca Musical.</p>
+<p>Además de enrutar las solicitudes, se encarga de manejar autenticación mediante Firebase, aplicar reglas de autorización basadas en roles, unificar el formato de la API, y gestionar diversas responsabilidades transversales como logging, manejo de errores y manipulación de headers.</p>
+<p>El Gateway está completamente implementado en Go, utilizando el framework Gin para el manejo HTTP y el paquete estándar de Go para construir reverse proxies que reenviarán las solicitudes a los microservicios.</p>
+<h3 id="estructura-del-código"><a class="header" href="#estructura-del-código">Estructura del Código</a></h3>
+<ul>
+<li>
+<p>Server
+Inicializa el router, configura Firebase, carga variables de entorno y monta todas las rutas.</p>
+</li>
+<li>
+<p>Routers
+Definen los endpoints expuestos por el Gateway y especifican a qué microservicio se redirige cada uno.</p>
+</li>
+<li>
+<p>Middlewares
+Validan tokens de Firebase y aplican reglas de autorización, tanto para usuarios autenticados como para administradores.</p>
+</li>
+<li>
+<p>Verifier
+Encapsula la lógica de verificación de tokens y extracción de claims utilizando Firebase Admin.</p>
+</li>
+<li>
+<p>Reverse Proxy
+Reenvía las solicitudes hacia los microservicios, eliminando prefijos y reconstruyendo la URL destino sin modificar el contenido original.</p>
+</li>
+</ul>
 <h2 id="users-service"><a class="header" href="#users-service">Users service</a></h2>
 <p>El servicio de usuarios se encarga de manejar las relaciones de usuarios y artistas, como puede ser su creación, seguir usuarios, guardar los generos favoritos y demas.</p>
 <p>Esta implementado en su totalidad en JavaScript, utilizando NodeJs y express. Para el manejo de la base de datos utiliza MongoDB con la extensión de mongoose para simplificar las acciones. Por otro lado utiliza los paquetes de firebase para enviar las notificaciones hacia los usuarios.</p>
