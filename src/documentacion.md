@@ -12,7 +12,7 @@ Luego, contamos con 2 servicios propios y uno que utilizamos de firebase. Empeza
 
 Por otro lado, los 2 servicios que estuvimos implementando son:
 
-Servicio de Library, maneja todo lo relacionado a canciones y albumes, es el core de la aplicación. Esta implementando en typescript y utiliza postgres, hosteado en supabase.
+Servicio de Library, maneja todo lo relacionado a canciones y albumes, es el core de la aplicación. Esta implementando en typescript y utiliza postgres y prisma como ORM, hosteado en prisma studio.
 
 Servicio de Users, encargado de manejar artistas y usuarios de la aplicación y las relaciones entre ellos. Este utiliza javascript y mongoDB, hosteado en mongodbAtlas, para funcionar. 
 
@@ -38,3 +38,26 @@ El código esta separado en multiples clases, cada una con su responsabilidad, s
  - Database. Es la conexión con la base de datos, cuenta con primitivas básicas para mantener la mayor separación entre los servicios y el acceso a los datos.
 
 ## Library service
+
+Este microservicio gestiona la metadata y el ciclo de vida de las canciones, albumes y playlists: creación, lectura, actualización, borrado, bloqueo/desbloqueo por administración, conteo de reproducciones y consultas especializadas (filtrado por género/artist/fecha, apariciones, últimos lanzamientos). Ademas, lleva un registro de auditoria de las colecciones, en cada accion que realize cambios de estado sobre las mismas.
+
+Está implementado en TypeScript sobre Node.js y Express. Usa Prisma como cliente de base de datos. La lógica está separada en capas para mantener responsabilidades claras y facilitar pruebas y mantenimiento.
+
+#### Estructura
+
+- Server: Inicializa Express, middlewares globales (parsing, CORS, manejo de errores) y arranca el listener HTTP.
+- Routers: Rutas REST que exponen operaciones sobre canciones, albumes o playlists.
+- Controllers: Validan y sanitizan entradas (zod schemas), manejan códigos HTTP (HttpCodesEnum), delegan a los services y formatean respuestas JSON. También realizan validaciones simples (p. ej. verifyInt) y logging.
+- Services: Contienen la lógica de negocio y orquestan operaciones. 
+- Repositorios: Acceso a datos a través de Prisma. Encapsulan consultas y mapeos a la persistencia.
+- Interfaces: Contienen los contratos TypeScript que definen las formas de datos compartidos entre capas (canciones, álbumes, auditoría y respuestas). Centralizan tipos para evitar duplicación y facilitar el intercambio seguro entre controllers, services y repositorios.
+- Tests: Permiten validar comportamiento de controllers/services/repositorios y asegurar integridad de la API contra la base de datos de prueba.
+
+#### Operaciones destacadas
+
+- CRUD de canciones con validación estricta.
+- Endpoints admin con acceso a todas las canciones y filtros adicionales.
+- Bloqueo/desbloqueo que actualizan estado y dejan registro de auditoría (CatalogState).
+- Incremento de reproducciones y consultas de apariciones y últimos lanzamientos por artista.
+- Filtrado por parámetros (genre, artistId, title, region, status, dateFrom/dateTo).
+- Pruebas y mantenimiento
