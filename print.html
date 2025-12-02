@@ -202,7 +202,7 @@
 <p>Nuestra aplicación corre en cloud utilizando los servicios de GCP (google cloud provider), como se puede ver en el diagrama, siempre que se intenta acceder a algun recurso es a traves de HTTP y debe pasar por el gateway. Este se encarga de las validaciones basicas verificando que tenga el token de acceso, y ruteando el request al servicio que corresponda.</p>
 <p>Luego, contamos con 2 servicios propios y uno que utilizamos de firebase. Empezando por este último, es el encargado de manejar el inicio de sesion y los registros de los usuarios, ya que lo encontramos como la manera mas sencilla y eficiente de hacerlo.</p>
 <p>Por otro lado, los 2 servicios que estuvimos implementando son:</p>
-<p>Servicio de Library, maneja todo lo relacionado a canciones y albumes, es el core de la aplicación. Esta implementando en typescript y utiliza postgres, hosteado en supabase.</p>
+<p>Servicio de Library, maneja todo lo relacionado a canciones y albumes, es el core de la aplicación. Esta implementando en typescript y utiliza postgres y prisma como ORM, hosteado en prisma studio.</p>
 <p>Servicio de Users, encargado de manejar artistas y usuarios de la aplicación y las relaciones entre ellos. Este utiliza javascript y mongoDB, hosteado en mongodbAtlas, para funcionar.</p>
 <p>Por otro lado este mismo servicio tiene un endpoint particular que es utilizado por los demas servicios que es el de subir un archivo (ya sea de sonido o una imágen) a Google Cloud Storage, tomamos esta decisión por que no le vimos sentido a crear un microservicio para que solo tenga este endpoint, y tener repetido la lógica por ejemplo en el servicio de Users y en el de Library para que por ejemplo uno solo cargue sonidos y otro las imagenes, tampoco lo vimos muy util.</p>
 <p>Para notar, tambien tenemos el monitoreo de nuestra aplicación utilizando pub/sub de google cloud, para que envie los logs a <a href="https://onenr.io/08jqkYmevwl">new relic y poder monitorearla</a>, y si se quiere buscar particularmente información de cada endpoint implementado, los repositorios de los servicios cuentan con sus respectivos archivos openapi.</p>
@@ -220,6 +220,27 @@
 <li>Database. Es la conexión con la base de datos, cuenta con primitivas básicas para mantener la mayor separación entre los servicios y el acceso a los datos.</li>
 </ul>
 <h2 id="library-service"><a class="header" href="#library-service">Library service</a></h2>
+<p>Este microservicio gestiona la metadata y el ciclo de vida de las canciones, albumes y playlists: creación, lectura, actualización, borrado, bloqueo/desbloqueo por administración, conteo de reproducciones y consultas especializadas (filtrado por género/artist/fecha, apariciones, últimos lanzamientos). Ademas, lleva un registro de auditoria de las colecciones, en cada accion que realize cambios de estado sobre las mismas.</p>
+<p>Está implementado en TypeScript sobre Node.js y Express. Usa Prisma como cliente de base de datos. La lógica está separada en capas para mantener responsabilidades claras y facilitar pruebas y mantenimiento.</p>
+<h4 id="estructura"><a class="header" href="#estructura">Estructura</a></h4>
+<ul>
+<li>Server: Inicializa Express, middlewares globales (parsing, CORS, manejo de errores) y arranca el listener HTTP.</li>
+<li>Routers: Rutas REST que exponen operaciones sobre canciones, albumes o playlists.</li>
+<li>Controllers: Validan y sanitizan entradas (zod schemas), manejan códigos HTTP (HttpCodesEnum), delegan a los services y formatean respuestas JSON. También realizan validaciones simples (p. ej. verifyInt) y logging.</li>
+<li>Services: Contienen la lógica de negocio y orquestan operaciones.</li>
+<li>Repositorios: Acceso a datos a través de Prisma. Encapsulan consultas y mapeos a la persistencia.</li>
+<li>Interfaces: Contienen los contratos TypeScript que definen las formas de datos compartidos entre capas (canciones, álbumes, auditoría y respuestas). Centralizan tipos para evitar duplicación y facilitar el intercambio seguro entre controllers, services y repositorios.</li>
+<li>Tests: Permiten validar comportamiento de controllers/services/repositorios y asegurar integridad de la API contra la base de datos de prueba.</li>
+</ul>
+<h4 id="operaciones-destacadas"><a class="header" href="#operaciones-destacadas">Operaciones destacadas</a></h4>
+<ul>
+<li>CRUD de canciones con validación estricta.</li>
+<li>Endpoints admin con acceso a todas las canciones y filtros adicionales.</li>
+<li>Bloqueo/desbloqueo que actualizan estado y dejan registro de auditoría (CatalogState).</li>
+<li>Incremento de reproducciones y consultas de apariciones y últimos lanzamientos por artista.</li>
+<li>Filtrado por parámetros (genre, artistId, title, region, status, dateFrom/dateTo).</li>
+<li>Pruebas y mantenimiento</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guía"><a class="header" href="#guía">Guía</a></h1>
 <p>Acá vamos a ir poniendo como instalarlo, etc</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="manual-para-admins---backoffice"><a class="header" href="#manual-para-admins---backoffice">Manual para admins - backoffice</a></h1>
