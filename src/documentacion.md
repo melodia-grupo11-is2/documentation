@@ -22,7 +22,28 @@ Para notar, tambien tenemos el monitoreo de nuestra aplicación utilizando pub/s
 
 ## Gateway
 
-[Acceso al gateway](https://gateway-182190207837.europe-west1.run.app/)
+El Servicio Gateway es el punto de entrada centralizado para toda la plataforma Melodía. Su función principal es recibir las solicitudes provenientes de las aplicaciones cliente (web, móvil o desktop) y dirigirlas de manera segura y eficiente hacia los microservicios correspondientes —como el Servicio de Usuarios o el Servicio de Biblioteca Musical.
+
+Además de enrutar las solicitudes, se encarga de manejar autenticación mediante Firebase, aplicar reglas de autorización basadas en roles, unificar el formato de la API, y gestionar diversas responsabilidades transversales como logging, manejo de errores y manipulación de headers.
+
+El Gateway está completamente implementado en Go, utilizando el framework Gin para el manejo HTTP y el paquete estándar de Go para construir reverse proxies que reenviarán las solicitudes a los microservicios.
+
+### Estructura del Código
+
+* Server
+Inicializa el router, configura Firebase, carga variables de entorno y monta todas las rutas.
+
+* Routers
+Definen los endpoints expuestos por el Gateway y especifican a qué microservicio se redirige cada uno.
+
+* Middlewares
+Validan tokens de Firebase y aplican reglas de autorización, tanto para usuarios autenticados como para administradores.
+
+* Verifier
+Encapsula la lógica de verificación de tokens y extracción de claims utilizando Firebase Admin.
+
+* Reverse Proxy
+Reenvía las solicitudes hacia los microservicios, eliminando prefijos y reconstruyendo la URL destino sin modificar el contenido original.
 
 ## Users service
 
